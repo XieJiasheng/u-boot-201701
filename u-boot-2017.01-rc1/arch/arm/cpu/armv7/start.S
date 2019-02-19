@@ -80,6 +80,12 @@ switch_to_hypervisor_ret:
 	bl gpio_out
 	bl led1_on
 
+	# bl system_clock_init
+	# bl uart_asm_init
+	# bl internal_ram_init
+
+
+
 	/* the mask ROM code should have PLL and others stable */
 #ifndef CONFIG_SKIP_LOWLEVEL_INIT
 	bl	cpu_init_cp15
@@ -87,6 +93,12 @@ switch_to_hypervisor_ret:
 	bl	cpu_init_crit
 #endif
 #endif
+	
+	ldr r1, =0xe02900820
+	ldr r2, =0x4b
+	str r2, [r1]
+
+
 
 	bl	_main
 

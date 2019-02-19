@@ -191,6 +191,9 @@ skip_check_didle:
 	str	r5, [r1, #0xf00]			@ INTADDRESS
 	str	r5, [r2, #0xf00]			@ INTADDRESS
 
+	bl led1_on
+	bl system_clock_init
+
 	/* for UART */
 	bl	uart_asm_init
 
