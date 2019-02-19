@@ -1,0 +1,6 @@
+error 1:
+include/config.h:5:22: fatal error: configs/.h: No such file or directory
+resolution:
+board/samsung/gec210/Kconfig and arch/arm/XXX/Kconfig do not match
+check and ensure consistent configuration
+

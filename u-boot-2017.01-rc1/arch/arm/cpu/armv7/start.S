@@ -76,6 +76,9 @@ switch_to_hypervisor_ret:
 	ldr	r0, =_start
 	mcr	p15, 0, r0, c12, c0, 0	@Set VBAR
 #endif
+	
+	bl gpio_out
+	bl led1_on
 
 	/* the mask ROM code should have PLL and others stable */
 #ifndef CONFIG_SKIP_LOWLEVEL_INIT
@@ -293,3 +296,31 @@ ENTRY(cpu_init_crit)
 	b	lowlevel_init		@ go setup pll,mux,memory
 ENDPROC(cpu_init_crit)
 #endif
+
+gpio_out:
+	ldr r11, =0xe0200240
+	ldr r12, =0x01111000
+	str r12, [r11]
+
+	ldr r11, =0xe0200244
+	ldr r12, = 0xff
+	str r12, [r11]
+	mov pc, lr
+
+
+.globl led1_on
+led1_on:
+	ldr r11, = 0xe0200244
+	ldr r12, [r11]
+	bic r12, r12,#(1<<3)
+	str r12, [r11]
+	mov pc, lr
+
+
+.globl led1_off
+led1_off:
+	ldr r11, =0xe0200244
+	ldr r12, [r11]
+	orr r12, r12,#(1<<3)
+	str r12, [r11]
+	mov pc, lr
