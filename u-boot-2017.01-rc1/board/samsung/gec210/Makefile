@@ -9,4 +9,4 @@
 #
 
 obj-y	:= goni.o onenand.o
-obj-y	+= lowlevel_init.o
+obj-y	+= lowlevel_init.o cpu_init.o

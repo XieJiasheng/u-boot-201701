@@ -199,6 +199,18 @@ skip_check_didle:
 
 	bl	internal_ram_init
 
+	ldr r0, =0xE0000000
+	bl uart_print_hex
+
+	bl mem_ctrl_asm_init
+
+	ldr r0,=0xddddaaaa
+	ldr r1,=0x31000000
+	str r0,[r1]
+
+	ldr r0, =0x31000000
+	bl uart_print_hex
+
 	cmp	r7, r8
 	/* Clear wakeup status register */
 	ldreq	r0, =S5PC100_WAKEUP_STAT
@@ -444,5 +456,71 @@ uart_asm_init:
 	ldr	r1, [r0, #0x4]			@ S5PC1XX_GPIO_DAT_OFFSET
 	orr	r1, r1, #(1 << 7)		@ 7 = 7 * 1-bit
 	str	r1, [r0, #0x4]			@ S5PC1XX_GPIO_DAT_OFFSET
+
+	ldr r0, =0xE2900800 @uart2 base
+
+	ldr r1, =3 @8 1 0
+	str r1, [r0, #0]
+
+	ldr r1, =0x305
+	str r1, [r0, #0x4]
+
+	ldr r1, =0x75
+	str r1, [r0, #0x08]
+
+	ldr r1, =0
+	str r1, [r0, #0x0c]
+
+	ldr r1, =34
+	str r1, [r0,#0x28]
+
+	ldr r1, =0xDFDD
+	str r1,[r0, #0x2C]
+
 200:
 	mov	pc, lr
+
+.globl uart_print_hex
+uart_print_hex:
+	ldr r0,[r0]
+	ldr r1,=0xe2900820
+
+	ldr r2, =0x30
+	str r2, [r1]     @UTH2="0"
+
+	ldr r2, =0x78
+	str r2, [r1]     @UTH2="x"
+
+	ldr r3, =28
+
+print_hex_loop:
+	lsr r2,r0,r3
+	and r2,r2,#0xF
+
+	cmp r2,#10
+
+	addmi r2,r2,#0x30 @0~10
+	addpl r2,r2,#0x37 @A~F
+
+	str r2, [r1]
+
+	sub r3,r3,#4
+
+	cmp r3,#0
+	bpl print_hex_loop
+
+	ldr r2, =0xa  
+	str r2,[r1]
+
+	ldr r2, =0xd
+	str r2,[r1]
+
+	mov pc, lr
+
+
+
+
+
+
+
+
