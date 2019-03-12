@@ -4,3 +4,9 @@ resolution:
 board/samsung/gec210/Kconfig and arch/arm/XXX/Kconfig do not match
 check and ensure consistent configuration
 
+record information:
+.text:
+	.vectors		-> arch/arm/lib/vectors.S
+	arch/arm/cpu/armv7/start.o 
+	.
+

@@ -435,6 +435,27 @@ uart_asm_init:
 	orr	r1, r1, #(1 << 5)		@ 5 = 5 * 1-bit
 	str	r1, [r0, #0x4]			@ S5PC1XX_GPIO_DAT_OFFSET
 
+	/*add uart initialize*/
+	ldr r0, =0xE2900800 @uart2 base
+
+	ldr r1, =3 @8 1 0
+	str r1, [r0, #0]
+
+	ldr r1, =0x305
+	str r1, [r0, #0x4]
+
+	ldr r1, =0x75
+	str r1, [r0, #0x08]
+
+	ldr r1, =0
+	str r1, [r0, #0x0c]
+
+	ldr r1, =34
+	str r1, [r0,#0x28]
+
+	ldr r1, =0xDFDD
+	str r1,[r0, #0x2C]
+
 	b	200f
 110:
 	/*
@@ -457,25 +478,7 @@ uart_asm_init:
 	orr	r1, r1, #(1 << 7)		@ 7 = 7 * 1-bit
 	str	r1, [r0, #0x4]			@ S5PC1XX_GPIO_DAT_OFFSET
 
-	ldr r0, =0xE2900800 @uart2 base
-
-	ldr r1, =3 @8 1 0
-	str r1, [r0, #0]
-
-	ldr r1, =0x305
-	str r1, [r0, #0x4]
-
-	ldr r1, =0x75
-	str r1, [r0, #0x08]
-
-	ldr r1, =0
-	str r1, [r0, #0x0c]
-
-	ldr r1, =34
-	str r1, [r0,#0x28]
-
-	ldr r1, =0xDFDD
-	str r1,[r0, #0x2C]
+	
 
 200:
 	mov	pc, lr
