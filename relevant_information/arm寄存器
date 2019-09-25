@@ -1,0 +1,63 @@
+1、arm寄存器：33个通用寄存器，7个状态寄存器
+2、arm的运行模式：system(系统模式)、user(用户)、FIQ(快速中断模式)、IRQ(外部中断模式)、supervisor(管理模式)、abort(终止模式)、undefined(未定义模式)、secure monitor(安全监控模式)
+3、功能：
+system/sys：运行系统具有特权
+user/usr：处理器正常执行程序的状态
+FIQ/fiq：用于高速数据传输或通道处理
+IRQ/irq：用于通用的中断处理
+supervisor/svc：系统的保护模式，可以操作更多资源，reset后需要进入的模式
+abort/abt：指令预读终止时进入的模式，可以进行虚拟存储和存储保护
+undefined/und：执行未定义的指令时进入的模式，可用于硬件协处理器的软件仿真
+secure monitor：主要用于安全交易
+
+4、各个模式的寄存器：
+system/user:        r0  r1  r2  r3  r4  r5  r6  r7  r8      r9      r10     r11     r12     r13     r14     r15(PC)     CPSR
+FIQ:                r0  r1  r2  r3  r4  r5  r6  r7  r8_fiq  r9_fiq  r10_fiq r11_fiq r12_fiq r13_fiq r14_fiq r15(PC)     CPSR    SPSR_fiq
+IRQ:                r0  r1  r2  r3  r4  r5  r6  r7  r8      r9      r10     r11     r12     r13_irq r14_irq r15(PC)     CPSR    SPSR_irq
+supervisor:         r0  r1  r2  r3  r4  r5  r6  r7  r8      r9      r10     r11     r12     r13_svc r14_svc r15(PC)     CPSR    SPSR_svc
+abort:              r0  r1  r2  r3  r4  r5  r6  r7  r8      r9      r10     r11     r12     r13_abt r14_abt r15(PC)     CPSR    SPSR_abt
+undefined:          r0  r1  r2  r3  r4  r5  r6  r7  r8      r9      r10     r11     r12     r13_und r14_und r15(PC)     CPSR    SPSR_und
+secure monitor:     r0  r1  r2  r3  r4  r5  r6  r7  r8      r9      r10     r11     r12     r13_mon r14_mon r15(PC)     CPSR    SPSR_mon
+
+5、各个寄存器的作用：
+未分组寄存器：r0~r7 -》各个模式共用，没有用作特殊用途
+分组寄存器：
+    r8~r14 -》r8~R12除了FIQ模式有自己独有的外，其他模式都共用
+    r13(SP/stack pointer)：经常用作堆栈指针寄存器，每个模式独有
+    r14(LR/link register)：用作链接寄存器，保存函数返回时的跳转地址
+
+程序计数器：r15 -》用于保存PC，arm状态下位[1:0]为0，位[31:2]保存PC值，Thumb状态下，位[0]为0，位[31:1]为PC的值
+arm采用多级流水线技术，PC保存的是当前指令的下两条指令的地址，既当前指令的地址为PC的值减8个字节
+
+状态寄存器：r16
+当前程序状态寄存器(CPSR/Current Program Status Register):包含条件码标志位，中断禁止位，处理器模式标志位，以及其他的控制和状态位，所有模式共有
+备份状态寄存器(SPSR/Saved Program Status Register):用于异常模式下保存CPSR的值
+
+6、CPSR的组成：
+format:
+  条件码标志位                                                                                       控制位
+/------^--------\                                                                      /--------------^------------\
+31  30  29  28  27 |26  25| 24 |23  22  21  20||19  18  17  16||15  14  13  12  11  10| 9  8  7  6  5 |4  3  2  1  0|
+N   Z   C   V   Q  |<res->| J  |<--reserved-->||<---GE[3:0]-->||<------reserved------>| E  A  I  F  T |<---M[4:0]-->|
+                                                                                                      \------v-----/
+                                                                                                           模式位
+
+a、条件码标志
+N：在结果是有符号的二进制补码情况下，如果结果为负数，则N=1；如果结果为非负数，则N=0。
+Z：如果结果为0，则Z=1;如果结果为非零，则Z=0。
+C：其设置分一下几种情况：
+    对于加法指令（包含比较指令CMN），如果产生进位，则C=1;否则C=0。
+    对于减法指令（包括比较指令CMP），如果产生借位，则C=0;否则C=1。
+    对于有移位操作的非法指令，C为移位操作中最后移出位的值。
+    对于其他指令，C通常不变。
+V：对于加减法指令，在操作数和结果是有符号的整数时，如果发生溢出，则V=1;如果无溢出发生，则V=0;对于其他指令，V通常不发生变化
+b、控制位
+I：IRQ中断禁止：1-》禁止，0-》允许
+F：FIQ中断禁止：1-》禁止，0-》允许
+T：工作状态位：1-》Thumb， 0-》arm
+
+模式位：
+user:
+system:
+supervisor:
+undefined:
