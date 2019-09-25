@@ -1,0 +1,86 @@
+1.link script -> u-boot.lds:
+.text :
+    {
+        *(.__image_copy_start)
+        *(.vectors)
+        arch/arm/cpu/armv7/start.o (.text*)
+        *(.text*)
+    }
+
+2.__image_copy_start -> relocate.S/relocate_64.S:
+
+ENTRY(relocate_code)
+    ldr r1, =__image_copy_start /* r1 <- SRC &__image_copy_start */
+    subs    r4, r0, r1      /* r4 <- relocation offset */
+    beq relocate_done       /* skip relocation */
+    ldr r2, =__image_copy_end   /* r2 <- SRC &__image_copy_end */
+
+copy_loop:
+    ldmia   r1!, {r10-r11}      /* copy from source address [r1]    */
+    stmia   r0!, {r10-r11}      /* copy to   target address [r0]    */
+    cmp r1, r2          /* until source end address [r2]    */
+    blo copy_loop
+
+    /*
+     * fix .rel.dyn relocations
+     */
+    ldr r2, =__rel_dyn_start    /* r2 <- SRC &__rel_dyn_start */
+    ldr r3, =__rel_dyn_end  /* r3 <- SRC &__rel_dyn_end */
+fixloop:
+    ldmia   r2!, {r0-r1}        /* (r0,r1) <- (SRC location,fixup) */
+    and r1, r1, #0xff
+    cmp r1, #R_ARM_RELATIVE
+    bne fixnext
+
+    /* relative fix: increase location by offset */
+    add r0, r0, r4
+    ldr r1, [r0]
+    add r1, r1, r4
+    str r1, [r0]
+fixnext:
+    cmp r2, r3
+    blo fixloop
+
+relocate_done:
+
+#ifdef __XSCALE__
+    /*
+     * On xscale, icache must be invalidated and write buffers drained,
+     * even with cache disabled - 4.2.7 of xscale core developer's manual
+     */
+    mcr p15, 0, r0, c7, c7, 0   /* invalidate icache */
+    mcr p15, 0, r0, c7, c10, 4  /* drain write buffer */
+#endif
+
+    /* ARMv4- don't know bx lr but the assembler fails to see that */
+
+#ifdef __ARM_ARCH_4__
+    mov pc, lr
+#else
+    bx  lr
+#endif
+
+ENDPROC(relocate_code)
+
+3. .vectors -> vectors.S:
+_start:
+
+#ifdef CONFIG_SYS_DV_NOR_BOOT_CFG
+    .word   CONFIG_SYS_DV_NOR_BOOT_CFG
+#endif
+
+    b   reset 
+    ldr pc, _undefined_instruction
+    ldr pc, _software_interrupt
+    ldr pc, _prefetch_abort
+    ldr pc, _data_abort
+    ldr pc, _not_used
+    ldr pc, _irq
+    ldr pc, _fiq
+
+4.reset -> start.S:
+reset  ---->>>   save_boot_params（什么都没干，跳回reset后面） ----->>> save_boot_params_ret----->>关中断  
+
+----->设置异常向量表的基地址 ------->cpu_init_cp15（无效icache，dcache等）------->cpu_init_crit（继续调用lowlevel）
+
+5.lowlevel -> 
